@@ -11,7 +11,6 @@ export default defineConfig({
       exclude: [
         'src/**/*.test.ts',
         'src/score/testdata/**',
-        'src/cli.ts',
       ],
       thresholds: {
         lines: 80,
