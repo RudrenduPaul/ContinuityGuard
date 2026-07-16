@@ -1,0 +1,42 @@
+name: No internal docs
+
+# Guardrail: this public repo must never carry internal build-pipeline
+# planning docs (an assistant-config [redacted], internal TODO/branch-
+# protection notes, internal competitive-strategy language). Fails the
+# build if any of that content is reintroduced by a future commit -- see
+# CONTRIBUTING.md "What never goes in this repo" for the full policy.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Fail if forbidden internal-doc filenames exist
+        run: |
+          set -euo pipefail
+          matches=$(git ls-files | grep -E '^(CLAUDE\.md|TODOS\.md|BRANCH_PROTECTION\.md|docs/branch-protection\.md|docs/security-review-.*\.md|docs/launch/.*|docs/.*preprint.*)$' || true)
+          if [ -n "$matches" ]; then
+            echo "Forbidden internal-doc file(s) found in this public repo:"
+            echo "$matches"
+            exit 1
+          fi
+
+      - name: Fail if tracked files reference internal review/planning language
+        run: |
+          set -euo pipefail
+          pattern='[redacted]|office.?hours|eng.?review|[redacted]|[redacted]|CSO threat.?model|/oss-[0-9]+-[a-z-]+|/plan-[redacted]|[redacted]|known limitation|[redacted]|[redacted]|investor.?outreach|[redacted]|hype.?seed'
+          if git grep -InE "$pattern" -- . ':!.github/workflows/no-internal-docs.yml'; then
+            echo "Tracked file(s) reference internal review/planning language -- see CONTRIBUTING.md."
+            exit 1
+          fi
+          echo "Clean."
