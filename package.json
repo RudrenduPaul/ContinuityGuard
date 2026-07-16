@@ -1,0 +1,62 @@
+{
+  "name": "continuityguard-cli",
+  "version": "0.1.0",
+  "description": "Free, local-first CLI that scores already-generated AI short-drama clips/frames for character-consistency and physics-plausibility problems before you waste render credits re-shooting a broken shot. Zero network calls, everything runs on your own machine.",
+  "keywords": [
+    "cli",
+    "video-qa",
+    "character-consistency",
+    "ai-video",
+    "short-drama",
+    "ffmpeg",
+    "onnxruntime",
+    "local-first",
+    "offline"
+  ],
+  "homepage": "https://github.com/RudrenduPaul/ContinuityGuard#readme",
+  "bugs": {
+    "url": "https://github.com/RudrenduPaul/ContinuityGuard/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RudrenduPaul/ContinuityGuard.git"
+  },
+  "license": "Apache-2.0",
+  "author": "Rudrendu Paul",
+  "type": "module",
+  "main": "./dist/cli.js",
+  "bin": {
+    "continuityguard": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx src/cli.ts",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "commander": "^15.0.0",
+    "onnxruntime-node": "^1.27.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.1.1",
+    "@vitest/coverage-v8": "^4.1.10",
+    "eslint": "^10.7.0",
+    "tsx": "^4.23.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.64.0",
+    "vitest": "^4.1.10"
+  }
+}
