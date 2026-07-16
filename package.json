@@ -37,12 +37,13 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-assets.mjs",
     "dev": "tsx src/cli.ts",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "verify:zero-network": "npm run build && node scripts/verify-zero-network.mjs",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
