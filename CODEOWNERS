@@ -1,0 +1,4 @@
+# CI/CD workflow files are the highest-leverage place for a supply-chain
+# compromise to hide, so changes to them always require a maintainer review
+# regardless of what other paths are touched in the same PR.
+/.github/workflows/ @RudrenduPaul
