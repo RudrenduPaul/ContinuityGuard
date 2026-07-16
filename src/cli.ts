@@ -77,9 +77,10 @@ export async function runScan(
 
   const startedAt = Date.now();
   const extractOptions = options.fps === undefined ? {} : { fps: options.fps };
-  const extracted = await extractFramesFromDirectory(targetDir, extractOptions);
+  let extracted: Awaited<ReturnType<typeof extractFramesFromDirectory>> = [];
 
   try {
+    extracted = await extractFramesFromDirectory(targetDir, extractOptions);
     const framesExtracted = extracted.reduce((sum, e) => sum + e.framePaths.length, 0);
 
     const consistencyResult = await scoreConsistency(
@@ -132,6 +133,15 @@ export async function runScan(
     }
 
     return 0;
+  } catch (error) {
+    // A single corrupt/undecodable clip, or any other failure partway
+    // through extraction or scoring, must never surface as an unhandled
+    // promise rejection (a raw stack trace with a non-deterministic exit
+    // code). Print a clean, actionable message on stderr and exit 1 --
+    // consistent with every other failure path in this command.
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`ContinuityGuard scan failed: ${message}`);
+    return 1;
   } finally {
     await cleanupFrames(extracted);
   }
