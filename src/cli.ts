@@ -68,7 +68,24 @@ export async function runScan(
   }
 
   const targetDir = resolve(directory);
-  const clips = await listClips(targetDir).catch(() => []);
+  let clips: Awaited<ReturnType<typeof listClips>>;
+  try {
+    clips = await listClips(targetDir);
+  } catch (error) {
+    // Distinguish "the path itself is wrong" (a very common first-run typo)
+    // from "the path is a real, readable, empty directory" below -- both
+    // used to collapse into the same misleading "no clips found" message.
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === 'ENOENT') {
+      console.error(`Directory not found: ${targetDir}`);
+    } else if (code === 'ENOTDIR') {
+      console.error(`Not a directory: ${targetDir}`);
+    } else {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`Could not read directory ${targetDir}: ${message}`);
+    }
+    return 1;
+  }
   if (clips.length === 0) {
     console.error(`No supported video clips found in ${targetDir}`);
     console.error('Supported extensions: .mp4 .mov .mkv .webm .avi');
