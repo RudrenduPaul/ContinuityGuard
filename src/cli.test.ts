@@ -71,6 +71,36 @@ describe('runScan', () => {
     }
   });
 
+  it('returns exit code 1 with a "directory not found" message for a nonexistent path, not "no clips found"', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const missingDir = join(tmpdir(), 'cg-does-not-exist-' + Date.now());
+      const code = await runScan(missingDir, { out: './continuityguard-report.json' });
+      expect(code).toBe(1);
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('Directory not found'));
+      expect(errorSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining('No supported video clips found')
+      );
+    } finally {
+      errorSpy.mockRestore();
+    }
+  });
+
+  it('returns exit code 1 with a "not a directory" message when the path is a file', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'cg-notadir-'));
+    const filePath = join(dir, 'a-file-not-a-directory.txt');
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      await writeFile(filePath, 'not a directory');
+      const code = await runScan(filePath, { out: './continuityguard-report.json' });
+      expect(code).toBe(1);
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('Not a directory'));
+    } finally {
+      errorSpy.mockRestore();
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
   it('scans the real committed fixtures end-to-end and writes a JSON report', async () => {
     const outDir = await mkdtemp(join(tmpdir(), 'cg-scan-out-'));
     const outPath = join(outDir, 'continuityguard-report.json');
