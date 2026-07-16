@@ -142,45 +142,65 @@ export interface ExtractedFrames {
  * `DEFAULT_SAMPLE_FPS` unless overridden. Frames are written to a fresh
  * temp directory the caller is responsible for cleaning up (or use
  * `extractFramesFromDirectory`, which cleans up automatically).
+ *
+ * If ffmpeg fails (a corrupt file, an unsupported codec, a zero-byte
+ * file, etc.) and this call created its own temp directory (no `workDir`
+ * override was passed in), that now-orphaned temp directory is removed
+ * before the error is re-thrown, rather than left behind on disk.
  */
 export async function extractFrames(
   clip: ClipInfo,
   options: { fps?: number; workDir?: string } = {}
 ): Promise<ExtractedFrames> {
   const fps = options.fps ?? DEFAULT_SAMPLE_FPS;
+  const ownsFrameDir = options.workDir === undefined;
   const frameDir =
     options.workDir ?? (await mkdtemp(join(tmpdir(), 'continuityguard-frames-')));
 
-  await runFfmpeg([
-    '-y',
-    '-i',
-    clip.path,
-    '-vf',
-    `fps=${fps},scale=${FRAME_SIZE}:${FRAME_SIZE}`,
-    '-c:v',
-    'rawvideo',
-    '-pix_fmt',
-    'rgb24',
-    '-f',
-    'image2',
-    '-loglevel',
-    'error',
-    join(frameDir, 'frame_%04d.rgb'),
-  ]);
+  try {
+    await runFfmpeg([
+      '-y',
+      '-i',
+      clip.path,
+      '-vf',
+      `fps=${fps},scale=${FRAME_SIZE}:${FRAME_SIZE}`,
+      '-c:v',
+      'rawvideo',
+      '-pix_fmt',
+      'rgb24',
+      '-f',
+      'image2',
+      '-loglevel',
+      'error',
+      join(frameDir, 'frame_%04d.rgb'),
+    ]);
 
-  const entries = await readdir(frameDir);
-  const framePaths = entries
-    .filter((entry) => entry.startsWith('frame_') && entry.endsWith('.rgb'))
-    .sort()
-    .map((entry) => join(frameDir, entry));
+    const entries = await readdir(frameDir);
+    const framePaths = entries
+      .filter((entry) => entry.startsWith('frame_') && entry.endsWith('.rgb'))
+      .sort()
+      .map((entry) => join(frameDir, entry));
 
-  return { clip, frameDir, framePaths };
+    return { clip, frameDir, framePaths };
+  } catch (error) {
+    if (ownsFrameDir) {
+      await rm(frameDir, { recursive: true, force: true });
+    }
+    throw error;
+  }
 }
 
 /**
  * Decodes every clip in a directory into sampled frames. Returns one
  * `ExtractedFrames` entry per clip. Callers should call `cleanupFrames` when
  * done to remove the temp directories.
+ *
+ * If ffmpeg fails to decode any single clip (a corrupt file, an unsupported
+ * codec, a zero-byte file, etc.), this throws a clear error naming the
+ * offending clip -- rather than letting a raw ffmpeg stderr dump propagate
+ * as an unhandled rejection -- and first cleans up the temp frame
+ * directories already created for clips that decoded successfully earlier
+ * in the loop, so one bad clip in a batch never leaks temp storage.
  */
 export async function extractFramesFromDirectory(
   directory: string,
@@ -189,7 +209,13 @@ export async function extractFramesFromDirectory(
   const clips = await listClips(directory);
   const results: ExtractedFrames[] = [];
   for (const clip of clips) {
-    results.push(await extractFrames(clip, options));
+    try {
+      results.push(await extractFrames(clip, options));
+    } catch (error) {
+      await cleanupFrames(results);
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to decode "${clip.name}" with ffmpeg: ${message}`, { cause: error });
+    }
   }
   return results;
 }

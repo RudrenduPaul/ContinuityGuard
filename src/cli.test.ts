@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mkdtemp, rm, readFile } from 'node:fs/promises';
+import { mkdtemp, rm, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -112,6 +112,28 @@ describe('runScan', () => {
       expect(printed.clips_scanned).toBe(8);
     } finally {
       writeSpy.mockRestore();
+    }
+  });
+
+  it('returns exit code 1 with a clean error message when a clip is corrupt, instead of throwing', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'cg-corrupt-scan-'));
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      await writeFile(join(dir, 'corrupt.mp4'), 'this is not a real video file');
+
+      // runScan must resolve (never reject) even when ffmpeg fails partway
+      // through the scan -- a rejection here would surface as an unhandled
+      // promise rejection at the CLI's .action() call site.
+      const code = await runScan(dir, { out: join(dir, 'report.json') });
+
+      expect(code).toBe(1);
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('ContinuityGuard scan failed')
+      );
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('corrupt.mp4'));
+    } finally {
+      errorSpy.mockRestore();
+      await rm(dir, { recursive: true, force: true });
     }
   });
 

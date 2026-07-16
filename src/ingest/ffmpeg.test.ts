@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { join } from 'node:path';
-import { mkdtemp, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, writeFile, rm, readdir, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import {
   checkFfmpegAvailable,
@@ -14,6 +14,15 @@ import {
   readRawFrame,
   FRAME_BYTES,
 } from './ffmpeg.js';
+
+/** Lists any leftover `continuityguard-frames-*` temp directories directly
+ * under `root` -- used to prove a failed decode never leaks its temp dir. */
+async function leakedFrameDirs(root: string): Promise<string[]> {
+  const entries = await readdir(root, { withFileTypes: true }).catch(() => []);
+  return entries
+    .filter((e) => e.isDirectory() && e.name.startsWith('continuityguard-frames-'))
+    .map((e) => e.name);
+}
 
 const FIXTURE_DIR = join(import.meta.dirname, '..', 'score', 'testdata', 'clips');
 
@@ -95,6 +104,35 @@ describe('extractFrames + readRawFrame (real ffmpeg decode)', () => {
       await rm(dir, { recursive: true, force: true });
     }
   });
+
+  it('cleans up its own temp frame directory when ffmpeg fails to decode a corrupt clip', async () => {
+    // Point os.tmpdir() (via TMPDIR) at a scratch root exclusive to this
+    // test, so the "no leaked continuityguard-frames-* dir" assertion below
+    // cannot be polluted by other test files' temp directories running
+    // concurrently in other workers.
+    const isolatedRoot = await mkdtemp(join(tmpdir(), 'cg-isolatedtmp-'));
+    const originalTmpdir = process.env.TMPDIR;
+    process.env.TMPDIR = isolatedRoot;
+    try {
+      const srcDir = await mkdtemp(join(tmpdir(), 'cg-corruptclip-src-'));
+      const corruptPath = join(srcDir, 'corrupt.mp4');
+      await writeFile(corruptPath, 'this is not a real video file');
+
+      await expect(
+        extractFrames({ path: corruptPath, name: 'corrupt.mp4' })
+      ).rejects.toThrow(/ffmpeg exited with code/);
+
+      expect(await leakedFrameDirs(isolatedRoot)).toEqual([]);
+      await rm(srcDir, { recursive: true, force: true });
+    } finally {
+      if (originalTmpdir === undefined) {
+        delete process.env.TMPDIR;
+      } else {
+        process.env.TMPDIR = originalTmpdir;
+      }
+      await rm(isolatedRoot, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('extractFramesFromDirectory', () => {
@@ -107,6 +145,38 @@ describe('extractFramesFromDirectory', () => {
       }
     } finally {
       await cleanupFrames(extracted);
+    }
+  });
+
+  it('throws a clip-specific error and cleans up already-extracted temp dirs when one clip is corrupt', async () => {
+    const isolatedRoot = await mkdtemp(join(tmpdir(), 'cg-isolatedtmp-'));
+    const originalTmpdir = process.env.TMPDIR;
+    process.env.TMPDIR = isolatedRoot;
+    try {
+      const dir = await mkdtemp(join(tmpdir(), 'cg-mixed-src-'));
+      // A good clip that sorts before the corrupt one, so listClips's
+      // deterministic name-sort order means it is fully extracted (and its
+      // temp dir created) before the corrupt clip is reached in the loop.
+      const goodBytes = await readFile(join(FIXTURE_DIR, 'calm-baseline.mp4'));
+      await writeFile(join(dir, 'aaa_good.mp4'), goodBytes);
+      await writeFile(join(dir, 'zzz_corrupt.mp4'), 'not a real video file');
+
+      await expect(extractFramesFromDirectory(dir)).rejects.toThrow(
+        /Failed to decode "zzz_corrupt\.mp4" with ffmpeg/
+      );
+
+      // Neither the good clip's temp frame dir (extracted, then cleaned up
+      // when the corrupt clip failed) nor the corrupt clip's own temp dir
+      // (cleaned up by extractFrames itself) should remain.
+      expect(await leakedFrameDirs(isolatedRoot)).toEqual([]);
+      await rm(dir, { recursive: true, force: true });
+    } finally {
+      if (originalTmpdir === undefined) {
+        delete process.env.TMPDIR;
+      } else {
+        process.env.TMPDIR = originalTmpdir;
+      }
+      await rm(isolatedRoot, { recursive: true, force: true });
     }
   });
 });
