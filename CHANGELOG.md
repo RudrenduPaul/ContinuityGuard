@@ -31,7 +31,7 @@ Real cosine-similarity results from that run:
 `CONSISTENCY_SIMILARITY_THRESHOLD` is set to **0.88** -- the midpoint
 between the lowest observed consistent-pair similarity (0.9906) and the
 observed inconsistent-pair similarity (0.7709), derived from this actual
-run, not copied from the execution plan's illustrative 0.62 placeholder.
+run, not an illustrative placeholder.
 This threshold is recalibrated whenever the fixture set materially changes
 -- see CONTRIBUTING.md "Fixture reproducibility."
 
@@ -57,8 +57,8 @@ Real frame-to-frame diff results from the same run, over
 `DISCONTINUITY_MULTIPLIER` is set to **3** -- comfortably above
 `calm-baseline.mp4`'s real observed max ratio (~1.14x, no false positive)
 and well below the deliberate discontinuity's real observed ratios
-(8.25x-8.32x), derived from this actual run, not the execution plan's
-illustrative 4.1x placeholder.
+(8.25x-8.32x), derived from this actual run, not an illustrative
+placeholder.
 
 ### Zero-network guarantee, verified empirically
 
@@ -73,10 +73,9 @@ call. This check runs in CI on every push.
 
 ### Runtime note: onnxruntime-node vs. a WASM fallback
 
-The execution plan flagged a real risk: an earlier, unrelated prototype in
-this same portfolio hit a native-binding crash using
-`@tensorflow/tfjs-node` on Node 24 / macOS ARM, and had to fall back to a
-pure-JS/WASM backend. `onnxruntime-node` was smoke-tested directly on that
+A known risk going in: an earlier, unrelated prototype hit a native-binding
+crash using `@tensorflow/tfjs-node` on Node 24 / macOS ARM, and had to fall
+back to a pure-JS/WASM backend. `onnxruntime-node` was smoke-tested directly on that
 same machine/Node/architecture combination before writing any scoring code
 (loading a real `InferenceSession` and running real inference against a
 small ONNX model succeeded without error). It did not reproduce the
