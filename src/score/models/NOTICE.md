@@ -8,10 +8,10 @@ in that repo), compatible with ContinuityGuard's own Apache-2.0 license.
 
 ## Why this model, and not a face/CLIP embedding model
 
-the original design for this project called for a pretrained ONNX embedding
+The original design called for a pretrained ONNX embedding
 model via `onnxruntime-node` for character-consistency scoring, with CLIP
-ViT-B/32 named as an illustrative example elsewhere in [reference removed]
-research. `onnxruntime-node` itself works fine on this build's target
+ViT-B/32 considered as one illustrative option.
+`onnxruntime-node` itself works fine on this build's target
 platform (see the root README's "onnxruntime-node vs. WASM" note) -- the
 substitution here is the *model*, not the runtime.
 
