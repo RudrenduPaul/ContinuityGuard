@@ -24,8 +24,8 @@ import { FRAME_SIZE, readRawFrame } from '../ingest/ffmpeg.js';
  * A consecutive-frame diff is flagged when it exceeds this multiple of the
  * shot's own median frame-to-frame diff. Derived from this repo's own
  * fixture run -- see CHANGELOG.md "CG03 fixture calibration" entry for the
- * exact command and raw numbers this value came from. Not the execution
- * plan's illustrative 4.1x placeholder.
+ * exact command and raw numbers this value came from, not an illustrative
+ * placeholder.
  */
 export const DISCONTINUITY_MULTIPLIER = 3;
 
