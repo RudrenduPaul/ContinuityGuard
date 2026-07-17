@@ -34,7 +34,7 @@ jobs:
       - name: Fail if tracked files reference internal review/planning language
         run: |
           set -euo pipefail
-          pattern='CEO review|office.?hours|eng.?review|devex review|CSO review|CSO threat.?model|/oss-[0-9]+-[a-z-]+|/plan-eng-review|/review finding|Reviewer Concern|viability score|WOUNDED|investor.?outreach|Show HN draft|hype.?seed|moat schema|fundrais(e|ing)|execution plan|this portfolio'
+          pattern='CEO review|office.?hours|eng.?review|devex review|CSO review|CSO threat.?model|/oss-[0-9]+-[a-z-]+|/plan-eng-review|/review finding|Reviewer Concern|viability score|WOUNDED|investor.?outreach|Show HN draft|hype.?seed|moat schema|fundrais(e|ing)|execution plan|this[[:space:]]portfolio'
           if git grep -InE "$pattern" -- . ':!.github/workflows/no-internal-docs.yml'; then
             echo "Tracked file(s) reference internal review/planning language -- see CONTRIBUTING.md."
             exit 1
