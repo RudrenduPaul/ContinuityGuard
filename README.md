@@ -10,6 +10,11 @@ node dist/cli.js scan ./generated-clips/
 [![License: Apache 2.0](https://img.shields.io/github/license/RudrenduPaul/ContinuityGuard)](LICENSE)
 [![Node.js >= 22](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](package.json)
 
+<!-- TODO: record a real terminal-recording demo (e.g. via `vhs`) showing
+     `node dist/cli.js scan src/score/testdata/clips` end to end and embed
+     it here as demo.gif. No asset exists in this repo yet, so nothing is
+     linked here rather than pointing at a file that doesn't exist. -->
+
 AI short-drama generation is having a real moment, and every title is a stack of individually generated shots. Generation models still drift: a character's face shifts slightly between cuts, or a motion jumps in a way that reads as physically wrong the moment a human watches it. Catching that after render is expensive. ContinuityGuard scans a folder of already-generated clips or frames from any pipeline and flags the shots worth a second look before you commit to a re-render.
 
 ## Install
@@ -21,6 +26,28 @@ git clone https://github.com/RudrenduPaul/ContinuityGuard.git && cd ContinuityGu
 ```
 
 That's a real, freshly-run install: on this machine it took `npm install` about 2.5 seconds and `npm run build` about 0.7 seconds, with 0 vulnerabilities reported by `npm audit`. Once built, run the CLI directly with `node dist/cli.js scan <directory>`, or `npm link` it locally to get the `continuityguard` command on your `PATH`.
+
+## Table of Contents
+
+- [Features](#features)
+- [What it does](#what-it-does)
+- [Quickstart](#quickstart)
+- [CLI reference](#cli-reference)
+- [Known limitations](#known-limitations-read-before-trusting-a-flag)
+- [How it compares](#how-it-compares)
+- [What is ContinuityGuard, and why does it exist](#what-is-continuityguard-and-why-does-it-exist)
+- [Local-only, always](#local-only-always)
+- [FAQ](#faq)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Features
+
+- **Two independent scoring passes in one scan.** Character-consistency (cosine similarity between MobileNetV2 embeddings of same-named-character crops) and physics-plausibility (frame-to-frame motion-discontinuity heuristic against each shot's own local baseline) both run from a single `scan` command.
+- **Zero network calls, checked mechanically on every push.** `npm run verify:zero-network` monkey-patches every network entry point Node exposes and runs a real scan against this repo's own fixtures in CI; it fails loudly if any code path ever tries to reach the network.
+- **Structured output for both humans and pipelines.** The same scan writes a human-readable terminal summary and a full machine-readable JSON report (`--json`), so a QA reviewer and a CI script can consume the same result.
+- **Fast on ordinary hardware.** The 8-clip fixture scan (decode, both scoring passes, and report write) completed in 0.53 to 0.63 seconds across repeated runs on a laptop CPU during this audit. No GPU required; scoring runs on CPU via `onnxruntime-node` and a 14MB bundled model.
+- **Every flag comes with a reason you can check yourself.** Each flagged shot carries the clip name, the numeric score, the threshold it crossed, and a plain-language explanation, sourced directly from the JSON report's `reason` field.
 
 ## What it does
 
@@ -138,7 +165,7 @@ There is no widely-used, directly comparable tool that combines local character-
 | Project | Stars | Last activity | License | What it actually is | How it compares |
 |---|---|---|---|---|---|
 | [Vchitect/VBench](https://github.com/Vchitect/VBench) | 1,697 | Mar 2026 | Apache-2.0 | CVPR 2024 academic benchmark suite that scores video-generation models across 16 dimensions, including a DINOv2-based "subject consistency" metric and a motion-smoothness metric, aggregated across many generated clips | The closest mechanism match: it also scores subject consistency and motion quality on already-generated video. It's a GPU-dependent research benchmark for evaluating a generation model in aggregate, not a lightweight local CLI built to give one creator a per-clip QA report on their own footage. |
-| [serengil/deepface](https://github.com/serengil/deepface) | 23,112 | Jun 2026 | MIT | Widely used, actively maintained Python library for face verification, embeddings, and facial attribute analysis | A component library for face-embedding similarity, not a video-native or short-drama-specific tool. Useful as a building block, but ships no physics check, no clip decoding, and no packaged report format of its own. |
+| [serengil/deepface](https://github.com/serengil/deepface) | 23,113 | Jun 2026 | MIT | Widely used, actively maintained Python library for face verification, embeddings, and facial attribute analysis | A component library for face-embedding similarity, not a video-native or short-drama-specific tool. Useful as a building block, but ships no physics check, no clip decoding, and no packaged report format of its own. |
 | [deepinsight/insightface](https://github.com/deepinsight/insightface) | 29,263 | May 2026 | No single machine-readable LICENSE in the repo; project docs describe MIT-licensed code with non-commercial restrictions on some pretrained models | State-of-the-art 2D/3D face analysis toolbox (detection, recognition, alignment) | Same category as DeepFace: a component library, not an end-to-end QA CLI. No physics-plausibility check, no report layer. |
 | [evalcrafter/EvalCrafter](https://github.com/evalcrafter/EvalCrafter) | 193 | Oct 2024 | None listed | CVPR 2024 research framework benchmarking video-generation models on visual quality, motion quality, and text-video alignment across 700 prompts | Adjacent research tool with no commits in roughly two years. Built to benchmark generation models with a heavy multi-metric research stack, not to give a fast local QA pass on a folder of already-generated clips. |
 
