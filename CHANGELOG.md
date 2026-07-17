@@ -1,6 +1,51 @@
 # Changelog
 
-All notable changes to this project are documented here.
+All notable changes to this project are documented here. This changelog
+covers both distributions -- the npm package (`continuityguard-cli`,
+JS/TS, repo root) and the PyPI package (`continuityguard-cli`, Python,
+`python/`) -- since they ship the same scoring logic and the same bundled
+ONNX model; entries note which distribution they apply to.
+
+## [Python 0.1.0] - 2026-07-17
+
+Initial public release of the Python port, published to PyPI as
+`continuityguard-cli` (`pip install continuityguard-cli`). This is the
+first published, installable distribution of ContinuityGuard -- the
+TypeScript/npm package has not been published to the npm registry as of
+this release (see the root README's "Install" section); this PyPI
+package is not a replacement for it, and both remain intended as
+first-class, maintained-together distributions once npm publishes.
+
+### Added
+
+- `continuityguard scan <directory>` CLI (console script
+  `continuityguard`, package `continuityguard`) with the same flags as
+  the TypeScript CLI: `--json`, `--fps` (default 2.3), `--out` (default
+  `./continuityguard-report.json`).
+- Programmatic library API: `from continuityguard import scan, scan_async`,
+  returning a structured `ScanReport` dataclass with the same field names
+  as the JSON report both CLIs produce.
+- CG01 (ffmpeg frame extraction), CG02 (character-consistency scoring),
+  and CG03 (physics-plausibility heuristic) reimplemented as genuine
+  Python logic, using `onnxruntime` (Python binding of the same ONNX
+  Runtime project as the TS side's `onnxruntime-node`) and the identical
+  bundled `mobilenetv2-7.onnx` model file -- not a wrapper around the Node
+  binary, and not a different model.
+- Full pytest suite (66 tests) ported from the TypeScript vitest suite,
+  covering ffmpeg ingestion, both scoring modules (including real
+  end-to-end ONNX inference against the repo's bundled fixture clips), the
+  JSON/terminal report formatters, and the CLI.
+
+### Notes
+
+- Verified against the TypeScript package's own documented benchmark on
+  the shared `src/score/testdata/clips/` fixtures: the Python CLI
+  reproduces the identical flagged shots -- `kenji_shot02.mp4` at
+  similarity 0.7709 (below the 0.88 threshold) and
+  `action-discontinuity.mp4` at 8.25x/8.32x local baseline (above the 3x
+  multiplier) -- confirming the same model weights and the same scoring
+  math produce the same result across both language runtimes on this
+  repo's fixtures.
 
 ## 0.1.0 -- initial release
 

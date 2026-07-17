@@ -9,6 +9,7 @@ node dist/cli.js scan ./generated-clips/
 [![CI](https://github.com/RudrenduPaul/ContinuityGuard/actions/workflows/ci.yml/badge.svg)](https://github.com/RudrenduPaul/ContinuityGuard/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/github/license/RudrenduPaul/ContinuityGuard)](LICENSE)
 [![Node.js >= 22](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](package.json)
+[![PyPI version](https://img.shields.io/pypi/v/continuityguard-cli.svg)](https://pypi.org/project/continuityguard-cli/)
 
 <!-- TODO: record a real terminal-recording demo (e.g. via `vhs`) showing
      `node dist/cli.js scan src/score/testdata/clips` end to end and embed
@@ -19,13 +20,28 @@ AI short-drama generation is having a real moment, and every title is a stack of
 
 ## Install
 
-ContinuityGuard is not published to the npm registry yet, so install from source for now:
+Two independent, equally first-class distributions ship the same scoring
+logic and the same bundled MobileNetV2 ONNX model. **Honest status as of
+this writing:** the Python package is published to PyPI; the TypeScript/
+npm package is not yet published to the npm registry (the npm registry
+itself has no `continuityguard-cli` entry today).
+
+**Python, published today:**
+
+```bash
+pip install continuityguard-cli
+```
+
+See [`python/README.md`](python/README.md) for the Python-specific
+quickstart, CLI reference, and library API.
+
+**TypeScript/npm, install from source for now:**
 
 ```bash
 git clone https://github.com/RudrenduPaul/ContinuityGuard.git && cd ContinuityGuard && npm install && npm run build
 ```
 
-That's a real, freshly-run install: on this machine it took `npm install` about 2.5 seconds and `npm run build` about 0.7 seconds, with 0 vulnerabilities reported by `npm audit`. Once built, run the CLI directly with `node dist/cli.js scan <directory>`, or `npm link` it locally to get the `continuityguard` command on your `PATH`.
+That's a real, freshly-run install: on this machine it took `npm install` about 2.5 seconds and `npm run build` about 0.7 seconds, with 0 vulnerabilities reported by `npm audit`. Once built, run the CLI directly with `node dist/cli.js scan <directory>`, or `npm link` it locally to get the `continuityguard` command on your `PATH`. This section will drop the "install from source" instructions in favor of a plain `npm install` the day the npm package is actually published -- tracked in [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Table of Contents
 
@@ -156,7 +172,7 @@ CG02 infers which character a clip belongs to from its filename, using a `<chara
 - **Thresholds are calibrated on a small, fully synthetic fixture set** (solid-color clips, no real faces or recorded motion). See `CHANGELOG.md` for the exact numbers and the command that produced them. This is a real, reproducible starting point for v0.1, calibrated from two synthetic pairs rather than a large labeled dataset. Expect the numbers to move as real-world reports come in.
 - **The `<character>_<shot-id>` filename convention is a v0.1 simplification**, built for a category that has no standard character-tagging metadata format yet. A clip that doesn't follow it still gets scored for physics; its consistency comparison is simply skipped.
 - **Requires a system `ffmpeg` install.** ContinuityGuard checks for it at startup and prints the exact install command for your OS if it's missing (for example `brew install ffmpeg` on macOS, `apt install ffmpeg` on Debian/Ubuntu). It does not bundle a static ffmpeg binary in v0.1. A bundled per-platform build would be materially larger than this project's own dependency footprint and would inherit ffmpeg's own shifting LGPL/GPL licensing terms depending on which codecs are compiled in. Depending on a system install keeps this package small and its licensing surface simple.
-- **Not published to npm yet.** Install from source (see "Install" above) until a registry release ships.
+- **The TypeScript/npm package is not published to npm yet.** Install from source (see "Install" above) until a registry release ships. The Python package, covering the same scoring logic and the same bundled model, is published (`pip install continuityguard-cli`) -- see [`python/README.md`](python/README.md).
 
 ## How it compares
 
@@ -201,7 +217,7 @@ No. That's mechanically enforced: `npm run verify:zero-network` patches every ne
 A bundled static ffmpeg binary would add tens of megabytes per platform to this package and would inherit ffmpeg's own licensing terms, which shift between LGPL and GPL depending on which codecs are compiled in. ffmpeg is close to ubiquitous on developer machines already, so v0.1 depends on a system install and checks for it at startup with a clear, OS-specific error if it's missing.
 
 **Is this on npm yet?**
-Not yet. Install from source for now (see "Install" above). A registry release will happen later, once there's a specific date to commit to.
+Not yet. Install from source for now (see "Install" above). A registry release will happen later, once there's a specific date to commit to. The Python package is on PyPI today (`pip install continuityguard-cli`), using the same scoring logic and the same bundled model -- see [`python/README.md`](python/README.md).
 
 **Will a big video-generation platform just build this into their product and make ContinuityGuard pointless?**
 Possibly, and this repo says so plainly rather than hiding it: any well-funded video-generation platform could ship an equivalent check natively, since it already runs the full generation pipeline and has a direct incentive to prevent wasted render costs. ContinuityGuard's value is being free, local, and pipeline-agnostic today. Nothing here promises that stays true tomorrow.
@@ -211,7 +227,14 @@ Yes. `--json` writes a machine-readable report an agent or CI step can parse, an
 
 ## Contributing
 
-See `CONTRIBUTING.md` for local setup, the full pre-PR checklist (lint, typecheck, coverage thresholds, `npm audit`, the zero-network verification script), and fixture-reproducibility rules. Reports of false positives or false negatives on real (not synthetic) AI short-drama footage, especially stylized or anime-adjacent content, are the single most useful contribution right now, since that's exactly the gap disclosed above.
+See `CONTRIBUTING.md` for local setup for both the TypeScript package (repo root) and the Python package (`python/`), the full pre-PR checklist (lint, typecheck, coverage thresholds, `npm audit`, the zero-network verification script), and fixture-reproducibility rules. Reports of false positives or false negatives on real (not synthetic) AI short-drama footage, especially stylized or anime-adjacent content, are the single most useful contribution right now, since that's exactly the gap disclosed above.
+
+## Documentation
+
+- [docs/getting-started.md](docs/getting-started.md) -- install paths for both packages, your first scan, the library API.
+- [docs/concepts.md](docs/concepts.md) -- what CG01-CG04 each do, and where the 0.88 / 3x thresholds came from.
+- [docs/integrations/ci.md](docs/integrations/ci.md) -- wiring ContinuityGuard into a CI pipeline.
+- [python/README.md](python/README.md) -- the Python package's own README (PyPI quickstart, CLI reference, fidelity notes).
 
 ## License
 
