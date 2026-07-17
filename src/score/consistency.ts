@@ -14,8 +14,8 @@
  * stylized footage as "worth a second look," never as a confirmed defect.
  *
  * Runtime note: the original design called for `onnxruntime-node` +
- * a pretrained ONNX embedding model, flagging a known risk that a prior,
- * unrelated prototype in a prior, unrelated prototype hit a native-binding crash
+ * a pretrained ONNX embedding model. A known risk going in: a prior,
+ * unrelated prototype hit a native-binding crash
  * with `@tensorflow/tfjs-node` on Node 24 / macOS ARM. `onnxruntime-node`
  * was smoke-tested directly on that same machine/Node combination before
  * writing this file (an InferenceSession loaded and ran real inference
@@ -44,8 +44,8 @@ const IMAGENET_STD = [0.229, 0.224, 0.225];
  * Cross-shot cosine-similarity threshold below which a shot is flagged as
  * a likely character-consistency break. Derived from this repo's own
  * fixture run -- see CHANGELOG.md "CG02 fixture calibration" entry for the
- * exact command and raw numbers this value came from. Not the execution
- * plan's illustrative 0.62 placeholder.
+ * exact command and raw numbers this value came from, not an illustrative
+ * placeholder.
  */
 export const CONSISTENCY_SIMILARITY_THRESHOLD = 0.88;
 
