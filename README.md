@@ -177,7 +177,7 @@ ContinuityGuard is a free, open-source, local-first CLI. It ingests a directory 
 
 It exists because AI short-drama generation is shipping hundreds of new titles a day, and every one of those titles is assembled from many separately generated shots. Generation models drift: character faces shift slightly between cuts, and motion sometimes jumps in a way that reads as physically wrong the moment a human watches it. Catching that before a re-render saves the cost of redoing the shot from scratch.
 
-ContinuityGuard is not trying to compete with the platforms that generate this content. Moonvalley, Runway, Shortical, and AniShort are all deeply funded, well-resourced companies actively shipping in exactly this space, and any one of them could add a check like this natively at any time, since they already run the generation pipeline end to end. This tool carries no defensible technical moat. Its real advantage is packaging: it works with output from any pipeline, it never uploads your footage anywhere, and it is free. That is the whole pitch, stated plainly.
+ContinuityGuard is a QA layer, not a generator, and that is the point. It sits on top of whatever pipeline already produced your footage instead of locking you into one, it runs entirely on your own machine so unreleased footage never has to leave it, and it is free with no account or API key required. A generation platform's own built-in QA, if it has one, only ever sees its own output; ContinuityGuard works the same way whether your clips came from an open-source pipeline, a commercial one, or a mix of both on the same project.
 
 ## Local-only, always
 
