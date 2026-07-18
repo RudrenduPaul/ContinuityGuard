@@ -13,15 +13,15 @@
  * short-drama category this tool targets -- is UNVERIFIED. Treat a flag on
  * stylized footage as "worth a second look," never as a confirmed defect.
  *
- * Runtime note: the original design called for `onnxruntime-node` +
- * a pretrained ONNX embedding model. A known risk going in: a prior,
- * unrelated prototype hit a native-binding crash
+ * Runtime note: this module uses `onnxruntime-node` with a pretrained
+ * ONNX embedding model. A known risk going in: a prior, unrelated
+ * prototype hit a native-binding crash
  * with `@tensorflow/tfjs-node` on Node 24 / macOS ARM. `onnxruntime-node`
  * was smoke-tested directly on that same machine/Node combination before
  * writing this file (an InferenceSession loaded and ran real inference
  * successfully) and did NOT reproduce that failure, so v0.1 uses
- * `onnxruntime-node` as originally planned -- no WASM fallback was needed
- * for the runtime. The one real substitution made is the *model*: see
+ * `onnxruntime-node` -- no WASM fallback was needed for the runtime.
+ * The one real substitution made is the *model*: see
  * src/score/models/NOTICE.md for why MobileNetV2 (a generic ImageNet
  * feature extractor) is used instead of a dedicated face/CLIP embedding
  * model, and what that means for accuracy.
