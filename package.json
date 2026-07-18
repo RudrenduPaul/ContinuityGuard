@@ -50,6 +50,9 @@
     "commander": "^15.0.0",
     "onnxruntime-node": "^1.27.0"
   },
+  "overrides": {
+    "adm-zip": "^0.6.0"
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.1.1",
