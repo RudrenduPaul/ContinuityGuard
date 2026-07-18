@@ -144,8 +144,12 @@ export async function runScan(
     if (options.json) {
       process.stdout.write(serializeReport(report));
     } else {
+      // Pass the raw --out value (not pre-resolved) so writeJsonReport's
+      // own traversal check runs against what the caller actually typed --
+      // resolving here first would turn every path absolute and silently
+      // bypass that check.
+      await writeJsonReport(options.out, report);
       const outPath = resolve(options.out);
-      await writeJsonReport(outPath, report);
       console.log(renderTerminalReport(report, outPath));
     }
 

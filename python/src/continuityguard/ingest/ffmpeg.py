@@ -49,6 +49,16 @@ FRAME_BYTES = FRAME_SIZE * FRAME_SIZE * 3
 
 _SUPPORTED_CLIP_EXTENSIONS = {".mp4", ".mov", ".mkv", ".webm", ".avi"}
 
+# A crafted/malformed clip must never hang a scan indefinitely (this is the
+# only ffmpeg call in the whole codebase with no bound on wall-clock time --
+# check_ffmpeg_available's `-version` probe already has its own short timeout).
+_DEFAULT_FFMPEG_TIMEOUT_SECONDS = 120.0
+
+# Pre-flight cap before handing a file to ffmpeg at all: an oversized clip
+# can drive unbounded temp-disk usage (one frame_%04d.rgb per sampled
+# frame) and CPU time regardless of the decode timeout above.
+_MAX_CLIP_BYTES = 2 * 1024 * 1024 * 1024  # 2 GiB
+
 
 @dataclass(frozen=True)
 class FfmpegCheckResult:
@@ -175,6 +185,16 @@ def extract_frames(
     owns_frame_dir = work_dir is None
     frame_dir = work_dir or tempfile.mkdtemp(prefix="continuityguard-frames-")
 
+    clip_size = Path(clip.path).stat().st_size
+    if clip_size > _MAX_CLIP_BYTES:
+        if owns_frame_dir:
+            shutil.rmtree(frame_dir, ignore_errors=True)
+        raise RuntimeError(
+            f'"{clip.name}" is {clip_size / (1024 * 1024):.0f}MB, over the '
+            f"{_MAX_CLIP_BYTES / (1024 * 1024 * 1024):.0f}GB per-clip limit -- skipped to "
+            "avoid unbounded temp-disk/CPU usage during decode"
+        )
+
     try:
         _run_ffmpeg(
             [
@@ -253,14 +273,23 @@ def cleanup_frames(extracted: List[ExtractedFrames]) -> None:
 def _run_ffmpeg(args: List[str]) -> None:
     """Runs ffmpeg with an explicit argument list -- never a shell string --
     so no filename or path, however untrusted, is ever interpreted as shell
-    syntax. Raises RuntimeError with ffmpeg's stderr on a non-zero exit."""
-    result = subprocess.run(
-        ["ffmpeg", *args],
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.PIPE,
-        text=True,
-    )
+    syntax. Raises RuntimeError with ffmpeg's stderr on a non-zero exit, or
+    if the process exceeds the per-clip decode timeout (subprocess.run kills
+    and waits for the child automatically in that case)."""
+    try:
+        result = subprocess.run(
+            ["ffmpeg", *args],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=_DEFAULT_FFMPEG_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as error:
+        raise RuntimeError(
+            f"ffmpeg did not finish within {_DEFAULT_FFMPEG_TIMEOUT_SECONDS:.0f}s "
+            "(likely a malformed/oversized input) and was killed"
+        ) from error
     if result.returncode != 0:
         stderr = (result.stderr or "").strip()
         raise RuntimeError(f"ffmpeg exited with code {result.returncode}: {stderr}")

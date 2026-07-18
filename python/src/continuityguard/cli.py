@@ -120,8 +120,12 @@ def run_scan(directory: str, json_output: bool = False, fps: Optional[float] = N
     if json_output:
         sys.stdout.write(serialize_report(report))
     else:
+        # Pass the raw --out value (not pre-resolved) so write_json_report's
+        # own traversal check runs against what the caller actually typed --
+        # resolving here first would turn every path absolute and silently
+        # bypass that check.
+        write_json_report(out, report)
         out_path = str(Path(out).resolve())
-        write_json_report(out_path, report)
         print(render_terminal_report(report, out_path))
 
     return 0

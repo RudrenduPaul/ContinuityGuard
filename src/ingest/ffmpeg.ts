@@ -20,9 +20,19 @@
  */
 
 import { spawn, spawnSync } from 'node:child_process';
-import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readdir, readFile, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
+// A crafted/malformed clip must never hang a scan indefinitely (this is the
+// only ffmpeg call in the whole codebase with no bound on wall-clock time --
+// checkFfmpegAvailable's `-version` probe already has its own short timeout).
+const DEFAULT_FFMPEG_TIMEOUT_MS = 120_000;
+
+// Pre-flight cap before handing a file to ffmpeg at all: an oversized clip
+// can drive unbounded temp-disk usage (one frame_%04d.rgb per sampled
+// frame) and CPU time regardless of the decode timeout above.
+const MAX_CLIP_BYTES = 2 * 1024 * 1024 * 1024; // 2 GiB
 
 export interface FfmpegCheckResult {
   available: boolean;
@@ -157,6 +167,14 @@ export async function extractFrames(
   const frameDir =
     options.workDir ?? (await mkdtemp(join(tmpdir(), 'continuityguard-frames-')));
 
+  const clipStat = await stat(clip.path);
+  if (clipStat.size > MAX_CLIP_BYTES) {
+    if (ownsFrameDir) await rm(frameDir, { recursive: true, force: true });
+    throw new Error(
+      `"${clip.name}" is ${(clipStat.size / (1024 * 1024)).toFixed(0)}MB, over the ${(MAX_CLIP_BYTES / (1024 * 1024 * 1024)).toFixed(0)}GB per-clip limit -- skipped to avoid unbounded temp-disk/CPU usage during decode`,
+    );
+  }
+
   try {
     await runFfmpeg([
       '-y',
@@ -240,15 +258,25 @@ export async function cleanupFrames(extracted: ExtractedFrames[]): Promise<void>
 
 function runFfmpeg(args: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
-    const child = spawn('ffmpeg', args, { stdio: ['ignore', 'ignore', 'pipe'] });
+    const child = spawn('ffmpeg', args, {
+      stdio: ['ignore', 'ignore', 'pipe'],
+      timeout: DEFAULT_FFMPEG_TIMEOUT_MS,
+      killSignal: 'SIGKILL',
+    });
     let stderr = '';
     child.stderr.on('data', (chunk: Buffer) => {
       stderr += chunk.toString();
     });
     child.on('error', reject);
-    child.on('close', (code) => {
+    child.on('close', (code, signal) => {
       if (code === 0) {
         resolve();
+      } else if (signal) {
+        reject(
+          new Error(
+            `ffmpeg was killed (${signal}) -- likely exceeded the ${DEFAULT_FFMPEG_TIMEOUT_MS}ms per-clip decode timeout: ${stderr.trim()}`,
+          ),
+        );
       } else {
         reject(new Error(`ffmpeg exited with code ${code}: ${stderr.trim()}`));
       }
