@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "continuityguard-cli"
-version = "0.1.0"
+version = "0.1.1"
 description = "Local, zero-network CLI and library that scores AI-generated short-drama video clips for character-consistency drift and physics-plausibility issues before you re-render."
 readme = "README.md"
 requires-python = ">=3.9"

@@ -11,10 +11,7 @@ node dist/cli.js scan ./generated-clips/
 [![Node.js >= 22](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](package.json)
 [![PyPI version](https://img.shields.io/pypi/v/continuityguard-cli.svg)](https://pypi.org/project/continuityguard-cli/)
 
-<!-- TODO: record a real terminal-recording demo (e.g. via `vhs`) showing
-     `node dist/cli.js scan src/score/testdata/clips` end to end and embed
-     it here as demo.gif. No asset exists in this repo yet, so nothing is
-     linked here rather than pointing at a file that doesn't exist. -->
+![Terminal recording of installing ContinuityGuard from source (npm install, npm run build) and running its first scan against the bundled fixture clips, showing the character-consistency and physics-plausibility flags in the human-readable report](docs/demo.gif)
 
 AI short-drama generation is having a real moment, and every title is a stack of individually generated shots. Generation models still drift: a character's face shifts slightly between cuts, or a motion jumps in a way that reads as physically wrong the moment a human watches it. Catching that after render is expensive. ContinuityGuard scans a folder of already-generated clips or frames from any pipeline and flags the shots worth a second look before you commit to a re-render.
 
@@ -103,6 +100,8 @@ Scan time: 0.6s. Nothing left this machine. No network calls were made.
 That full scan, decode plus both scoring passes plus report write, took between 0.6 and 1.4 seconds wall time across several runs on this machine. The two consistent-character pairs in the same fixture set score high and correctly go unflagged: `mei_shot01.mp4` vs `mei_shot02.mp4` at 0.9975 similarity, and `aiko_shot01.mp4` vs `aiko_shot02.mp4` at 0.9906. The deliberately inconsistent pair, `kenji_shot01.mp4` vs `kenji_shot02.mp4`, scores 0.7709 and correctly gets flagged against the 0.88 threshold. On the physics side, `calm-baseline.mp4` (smooth motion throughout) tops out at roughly 1.14x its own local baseline and stays unflagged, while `action-discontinuity.mp4` (one deliberate abrupt jump) hits 8.25x and 8.32x and gets flagged against the 3x multiplier. Every one of these numbers came from the command above; the full raw diff values live in `CHANGELOG.md`.
 
 Every flag carries a clip name, a numeric score, and a plain-language reason, so you or your QA reviewer can see exactly why a shot got flagged.
+
+![Terminal recording of running node dist/cli.js scan src/score/testdata/clips --json, printing the full machine-readable JSON report with per-shot flags, thresholds, and scan metadata to stdout](docs/usage.gif)
 
 ## Quickstart
 
@@ -224,6 +223,15 @@ Possibly, and this repo says so plainly rather than hiding it: any well-funded v
 
 **Can I use this in CI?**
 Yes. `--json` writes a machine-readable report an agent or CI step can parse, and the whole tool runs with zero network access, so it drops into a CI job the same way any other local static-analysis step would.
+
+**What platforms and Node versions does this run on?**
+`package.json` requires Node >=22 and lists no OS restriction. The native scoring dependency, `onnxruntime-node`, ships prebuilt binaries for macOS, Linux, and Windows. You also need a system `ffmpeg` install (checked at startup, with an OS-specific install command printed if it's missing). The Python distribution (`pip install continuityguard-cli`) needs Python >=3.9 and the same system `ffmpeg` requirement, and is classified `Operating System :: OS Independent`.
+
+**How does this compare to a face-embedding library like deepface instead of a generic ImageNet model?**
+Directly, they solve different layers of the same problem. `serengil/deepface` (MIT-licensed, actively maintained) is a dedicated face-verification and embedding library; wiring it into a scan pipeline yourself would likely give more accurate character-consistency scoring than ContinuityGuard's current generic MobileNetV2 embedding, especially on stylized content. ContinuityGuard's role isn't to out-perform a dedicated face-embedding library on embeddings alone: it's the packaged CLI on top, doing ffmpeg decoding, the physics-plausibility pass, and structured report output in one zero-network command. Swapping in a stronger embedding model later is an open, tracked improvement, not a claim already delivered in v0.1. See "How it compares" above for the fuller table.
+
+**Is this free to use commercially?**
+Yes. Everything in this repo is Apache 2.0, including the permissive patent grant that license carries. There's no separate commercial tier, no usage cap, and no license key. Attribution and the license notice requirements of Apache 2.0 still apply, same as any Apache-licensed dependency you'd pull into a commercial project.
 
 ## Contributing
 
