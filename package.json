@@ -1,6 +1,6 @@
 {
   "name": "continuityguard-cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Free, local-first CLI that scores already-generated AI short-drama clips/frames for character-consistency and physics-plausibility problems before you waste render credits re-shooting a broken shot. Zero network calls, everything runs on your own machine.",
   "keywords": [
     "cli",
