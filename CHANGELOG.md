@@ -6,15 +6,24 @@ JS/TS, repo root) and the PyPI package (`continuityguard-cli`, Python,
 `python/`) -- since they ship the same scoring logic and the same bundled
 ONNX model; entries note which distribution they apply to.
 
+## [npm 0.1.2] - 2026-07-19
+
+The TypeScript/npm package is now published to the npm registry as
+`continuityguard-cli` (`npm install -g continuityguard-cli`). Both
+distributions -- npm and PyPI -- are now published, installable, and
+first-class, shipping the same scoring logic and the same bundled
+MobileNetV2 ONNX model.
+
 ## [Python 0.1.0] - 2026-07-17
 
 Initial public release of the Python port, published to PyPI as
 `continuityguard-cli` (`pip install continuityguard-cli`). This is the
 first published, installable distribution of ContinuityGuard -- the
-TypeScript/npm package has not been published to the npm registry as of
+TypeScript/npm package had not been published to the npm registry as of
 this release (see the root README's "Install" section); this PyPI
-package is not a replacement for it, and both remain intended as
-first-class, maintained-together distributions once npm publishes.
+package was not a replacement for it, and both were intended as
+first-class, maintained-together distributions once npm publishes, which
+it did on 2026-07-18 (see the npm 0.1.2 entry above).
 
 ### Added
 

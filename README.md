@@ -18,12 +18,11 @@ AI short-drama generation is having a real moment, and every title is a stack of
 ## Install
 
 Two independent, equally first-class distributions ship the same scoring
-logic and the same bundled MobileNetV2 ONNX model. **Honest status as of
-this writing:** the Python package is published to PyPI; the TypeScript/
-npm package is not yet published to the npm registry (the npm registry
-itself has no `continuityguard-cli` entry today).
+logic and the same bundled MobileNetV2 ONNX model. Both are published and
+installable today: the Python package on PyPI, and the TypeScript/npm
+package on the npm registry.
 
-**Python, published today:**
+**Python:**
 
 ```bash
 pip install continuityguard-cli
@@ -32,13 +31,18 @@ pip install continuityguard-cli
 See [`python/README.md`](python/README.md) for the Python-specific
 quickstart, CLI reference, and library API.
 
-**TypeScript/npm, install from source for now:**
+**TypeScript/npm:**
 
 ```bash
-git clone https://github.com/RudrenduPaul/ContinuityGuard.git && cd ContinuityGuard && npm install && npm run build
+npm install -g continuityguard-cli
 ```
 
-That's a real, freshly-run install: on this machine it took `npm install` about 2.5 seconds and `npm run build` about 0.7 seconds, with 0 vulnerabilities reported by `npm audit`. Once built, run the CLI directly with `node dist/cli.js scan <directory>`, or `npm link` it locally to get the `continuityguard` command on your `PATH`. This section will drop the "install from source" instructions in favor of a plain `npm install` the day the npm package is actually published -- tracked in [`CHANGELOG.md`](CHANGELOG.md).
+That puts the `continuityguard` command on your `PATH` -- run it with
+`continuityguard scan <directory>`. To build from source instead (for
+local development or to track `main`), clone the repo and run `npm
+install && npm run build`, then run the CLI with `node dist/cli.js scan
+<directory>`, or `npm link` it locally to get the `continuityguard`
+command from your working copy.
 
 ## Table of Contents
 
@@ -171,7 +175,6 @@ CG02 infers which character a clip belongs to from its filename, using a `<chara
 - **Thresholds are calibrated on a small, fully synthetic fixture set** (solid-color clips, no real faces or recorded motion). See `CHANGELOG.md` for the exact numbers and the command that produced them. This is a real, reproducible starting point for v0.1, calibrated from two synthetic pairs rather than a large labeled dataset. Expect the numbers to move as real-world reports come in.
 - **The `<character>_<shot-id>` filename convention is a v0.1 simplification**, built for a category that has no standard character-tagging metadata format yet. A clip that doesn't follow it still gets scored for physics; its consistency comparison is simply skipped.
 - **Requires a system `ffmpeg` install.** ContinuityGuard checks for it at startup and prints the exact install command for your OS if it's missing (for example `brew install ffmpeg` on macOS, `apt install ffmpeg` on Debian/Ubuntu). It does not bundle a static ffmpeg binary in v0.1. A bundled per-platform build would be materially larger than this project's own dependency footprint and would inherit ffmpeg's own shifting LGPL/GPL licensing terms depending on which codecs are compiled in. Depending on a system install keeps this package small and its licensing surface simple.
-- **The TypeScript/npm package is not published to npm yet.** Install from source (see "Install" above) until a registry release ships. The Python package, covering the same scoring logic and the same bundled model, is published (`pip install continuityguard-cli`) -- see [`python/README.md`](python/README.md).
 
 ## How it compares
 
@@ -216,7 +219,7 @@ No. That's mechanically enforced: `npm run verify:zero-network` patches every ne
 A bundled static ffmpeg binary would add tens of megabytes per platform to this package and would inherit ffmpeg's own licensing terms, which shift between LGPL and GPL depending on which codecs are compiled in. ffmpeg is close to ubiquitous on developer machines already, so v0.1 depends on a system install and checks for it at startup with a clear, OS-specific error if it's missing.
 
 **Is this on npm yet?**
-Not yet. Install from source for now (see "Install" above). A registry release will happen later, once there's a specific date to commit to. The Python package is on PyPI today (`pip install continuityguard-cli`), using the same scoring logic and the same bundled model -- see [`python/README.md`](python/README.md).
+Yes. `npm install -g continuityguard-cli` installs it today. The Python package is also on PyPI (`pip install continuityguard-cli`), using the same scoring logic and the same bundled model -- see [`python/README.md`](python/README.md).
 
 **Will a big video-generation platform just build this into their product and make ContinuityGuard pointless?**
 Possibly, and this repo says so plainly rather than hiding it: any well-funded video-generation platform could ship an equivalent check natively, since it already runs the full generation pipeline and has a direct incentive to prevent wasted render costs. ContinuityGuard's value is being free, local, and pipeline-agnostic today. Nothing here promises that stays true tomorrow.
