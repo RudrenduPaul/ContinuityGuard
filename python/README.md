@@ -24,13 +24,12 @@ a wrapper around a Node process. It ships the exact same bundled
 MobileNetV2 ONNX model file the TypeScript side uses, so both runtimes
 score identical input against the same weights.
 
-**Honest note on the npm side:** as of this package's release, the
-TypeScript/npm distribution of ContinuityGuard has not been published to
-the npm registry yet (the repo's own README says so, and the npm registry
-has no `continuityguard-cli` entry) -- this PyPI package is the first
-published, installable distribution of ContinuityGuard. If you want the
-TypeScript source today, clone the repo and build from source (see the
-[project README](https://github.com/RudrenduPaul/ContinuityGuard#readme)).
+**Both distributions are published today.** The TypeScript/npm package is
+on the npm registry (`npm install -g continuityguard-cli`) and this PyPI
+package is on PyPI, both shipping the same scoring logic and the same
+bundled MobileNetV2 ONNX model -- see the [project
+README](https://github.com/RudrenduPaul/ContinuityGuard#readme) for the
+TypeScript CLI reference.
 
 ## Install
 

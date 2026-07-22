@@ -7,27 +7,28 @@ shifting between shots) and physics-implausible motion (a frame-to-frame
 jump that reads as wrong the moment a human watches it). It ships as two
 independent, equally first-class packages that use the exact same bundled
 MobileNetV2 ONNX model: an npm package (`continuityguard-cli`,
-JavaScript/TypeScript, install-from-source only today -- see the note
-below) and a PyPI package (`continuityguard-cli`, Python).
+JavaScript/TypeScript) and a PyPI package (`continuityguard-cli`, Python).
 
-**Honest note on install paths, read this before picking one:** the
-Python package is published to PyPI today (`pip install
-continuityguard-cli`). The TypeScript/npm package is not yet published to
-the npm registry as of this writing -- the repo's own root README says so,
-and the npm registry itself returns no `continuityguard-cli` entry. If you
-want the TypeScript CLI, clone the repo and build from source (see the
-root README's "Install" section). This doc covers both, and is updated the
-day that changes.
+Both packages are published and installable today: the Python package on
+PyPI (`pip install continuityguard-cli`) and the TypeScript/npm package on
+the npm registry (`npm install -g continuityguard-cli`). This doc covers
+both.
 
 ## Install
 
-**pip (Python library + CLI), published today:**
+**pip (Python library + CLI):**
 
 ```bash
 pip install continuityguard-cli
 ```
 
-**npm (JS/TS CLI), from source only today:**
+**npm (JS/TS CLI):**
+
+```bash
+npm install -g continuityguard-cli
+```
+
+To build from source instead (for local development or to track `main`):
 
 ```bash
 git clone https://github.com/RudrenduPaul/ContinuityGuard.git
@@ -38,7 +39,8 @@ npm run build
 
 Neither path fetches anything at scan time beyond the local `ffmpeg`
 binary you already have installed: the ONNX model and all scoring logic
-ship inside the package itself (npm tarball/`dist/` build or Python wheel).
+ship inside the package itself (npm global install/tarball, source
+`dist/` build, or Python wheel).
 
 ## Requirements
 
