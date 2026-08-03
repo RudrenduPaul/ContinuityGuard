@@ -40,7 +40,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && node scripts/copy-assets.mjs",
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-assets.mjs && chmod +x dist/cli.js",
     "dev": "tsx src/cli.ts",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
