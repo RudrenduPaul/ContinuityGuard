@@ -14,6 +14,8 @@
 
 import { Command } from 'commander';
 import { resolve } from 'node:path';
+import { realpathSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import {
   checkFfmpegAvailable,
   buildMissingFfmpegMessage,
@@ -172,8 +174,25 @@ export async function runScan(
    CI/manual testing rather than the unit test suite, matching this repo's
    convention of excluding src/cli.ts's process-wiring lines from coverage
    (see vitest.config.ts) while still unit-testing runScan/createProgram
-   directly. */
-if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
+   directly.
+   A straight `import.meta.url === file://${process.argv[1]}` comparison
+   breaks whenever this file is invoked through a symlink -- which is
+   exactly how npm wires up a global/`bin` install (e.g. `npm install -g
+   continuityguard-cli`, or an `npx` run): argv[1] stays the symlink path
+   (e.g. .../bin/continuityguard), while import.meta.url resolves through
+   the symlink to the real target file, so the two never match, the guard
+   silently evaluates false, and the CLI exits 0 having done nothing.
+   Resolving argv[1] to its real path before comparing fixes both the
+   symlinked and non-symlinked (direct `node dist/cli.js`) invocation. */
+function isDirectlyExecuted(): boolean {
+  if (!process.argv[1]) return false;
+  try {
+    return import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
+  } catch {
+    return false;
+  }
+}
+if (isDirectlyExecuted()) {
   createProgram().parseAsync(process.argv);
 }
 /* c8 ignore stop */
