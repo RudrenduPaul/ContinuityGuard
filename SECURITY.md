@@ -8,7 +8,7 @@ version of each distribution receives security fixes.
 | Package | Version | Supported |
 | --- | --- | --- |
 | `continuityguard-cli` (PyPI) | 0.1.x | Yes |
-| `continuityguard-cli` (npm) | -- | Not yet published to the npm registry as of this writing; see the root README's "Install" section. |
+| `continuityguard-cli` (npm) | 0.1.x | Yes |
 
 ## Reporting a vulnerability
 
@@ -50,3 +50,27 @@ scope and timeline depend on severity.
   wrong on a given clip. Those are disclosed, expected limitations (see
   README "Known limitations"), not security bugs -- please still open a
   regular issue if you find one, so the fixture set can be expanded.
+
+## Known, currently-unresolved advisory (npm distribution)
+
+**Honest disclosure:** installing the npm package
+(`npm install -g continuityguard-cli`) pulls in `adm-zip@<0.6.0` as a
+transitive dependency of `onnxruntime-node`, which carries a HIGH severity
+advisory ([GHSA-xcpc-8h2w-3j85](https://github.com/advisories/GHSA-xcpc-8h2w-3j85),
+a crafted ZIP file can trigger a 4GB memory allocation). `package.json`
+pins `adm-zip` to `^0.6.0` (the patched version) via npm's `overrides`
+field, and that override is honored inside this repo's own install/CI --
+but npm's `overrides` field only ever applies to the *top-level* project
+being installed, never to consumers who install this package as a
+dependency or global tool. There is currently no released version of
+`onnxruntime-node` (as of `1.27.0`, the latest stable) that depends on a
+patched `adm-zip` itself, so this repo cannot force the fix to propagate
+to real installs from its own `package.json` alone. Tracked upstream;
+will be resolved by bumping `onnxruntime-node` the moment a release with a
+patched `adm-zip` ships. `adm-zip` is only exercised at install time
+(unpacking `onnxruntime-node`'s prebuilt binary), not during
+`continuityguard scan` itself, which narrows the practical exposure window
+to the `npm install` step rather than every scan run -- but it is still a
+real, currently-open HIGH severity advisory reachable via the documented
+install command, not a theoretical one, and is disclosed here rather than
+left silent.

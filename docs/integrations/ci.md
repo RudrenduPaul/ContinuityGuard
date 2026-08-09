@@ -41,18 +41,28 @@ JSON artifact in a following step.
 
 ## GitHub Actions -- TypeScript/npm CLI
 
-The npm package is not published to the npm registry yet (see the root
-README's "Install" section), so a CI job on this side needs to build from
-source rather than `npm install`ing a published package:
-
 ```yaml
-name: ContinuityGuard (from source)
+name: ContinuityGuard
 on: [pull_request]
 
 jobs:
   continuityguard-scan:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: npm install -g continuityguard-cli
+      - name: Scan generated clips
+        run: continuityguard scan ./generated-clips --json --out continuityguard-report.json
+```
+
+To build from source instead (for tracking `main` rather than the
+published package):
+
+```yaml
       - uses: actions/checkout@v4
         with:
           repository: RudrenduPaul/ContinuityGuard
@@ -68,10 +78,6 @@ jobs:
       - name: Scan generated clips
         run: node continuityguard-src/dist/cli.js scan ./generated-clips --json --out continuityguard-report.json
 ```
-
-This doc will drop the "from source" checkout step in favor of a plain
-`npm install --save-dev continuityguard-cli` the day the npm package is
-actually published -- tracked in the root `CHANGELOG.md`.
 
 ## Pre-commit / local pre-push hook (Python)
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import tempfile
+from importlib.metadata import PackageNotFoundError, version as pkg_version
 from pathlib import Path
 from unittest import mock
 
@@ -24,7 +25,14 @@ def test_build_parser_registers_the_scan_subcommand_with_json_fps_out_options():
 
 
 def test_reports_the_tool_version():
-    assert TOOL_VERSION == "0.1.0"
+    # TOOL_VERSION must come from the installed distribution's own metadata
+    # (sourced from pyproject.toml at build time), never a hardcoded string
+    # that can drift out of sync with the real published version.
+    try:
+        expected = pkg_version("continuityguard-cli")
+    except PackageNotFoundError:
+        expected = "0.0.0-dev"
+    assert TOOL_VERSION == expected
 
 
 def test_returns_exit_code_1_with_the_install_command_when_ffmpeg_is_not_on_path(capsys):

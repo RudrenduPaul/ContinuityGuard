@@ -6,15 +6,54 @@ JS/TS, repo root) and the PyPI package (`continuityguard-cli`, Python,
 `python/`) -- since they ship the same scoring logic and the same bundled
 ONNX model; entries note which distribution they apply to.
 
+## [npm 0.1.5] / [Python 0.1.5] - 2026-08-08
+
+### Fixed
+
+- `--version` on both the npm and PyPI CLIs printed a stale hardcoded
+  `0.1.0`, regardless of the actual installed/published version (npm was
+  live at 0.1.4, PyPI was live at 0.1.4 -- both had drifted well past the
+  hardcoded string). Same root-cause class as other staleness bugs found
+  this cycle: a duplicated version value that wasn't the single source of
+  truth.
+  - `src/cli.ts`: `TOOL_VERSION` now reads `version` out of `package.json`
+    at runtime (resolved relative to the running file, so it works from
+    both `src/` via `tsx` and the built `dist/cli.js` in a real npm
+    install) instead of a separate hardcoded literal.
+  - `python/src/continuityguard/scan.py`: `TOOL_VERSION` now reads the
+    installed distribution's own version via `importlib.metadata.version
+    ("continuityguard-cli")` (sourced from `pyproject.toml` at build
+    time), falling back to an explicit `0.0.0-dev` placeholder only when
+    running from source with no installed distribution to read. `__init__
+    .py`'s `__version__` now derives from this same value instead of its
+    own separate hardcoded literal.
+  - Verified via a real `npm pack` tarball install and a real `pip
+    install` from PyPI reproducing the stale `0.1.0` output before the
+    fix, then a rebuilt tarball / editable install printing the correct
+    current version after it.
+- Also corrects both `package.json` and `python/pyproject.toml`, which had
+  fallen behind the versions actually live on their registries (npm and
+  PyPI were both already at 0.1.4 from prior publishes whose version bump
+  was never committed back to this repo).
+
+## [npm 0.1.2] - 2026-07-19
+
+The TypeScript/npm package is now published to the npm registry as
+`continuityguard-cli` (`npm install -g continuityguard-cli`). Both
+distributions -- npm and PyPI -- are now published, installable, and
+first-class, shipping the same scoring logic and the same bundled
+MobileNetV2 ONNX model.
+
 ## [Python 0.1.0] - 2026-07-17
 
 Initial public release of the Python port, published to PyPI as
 `continuityguard-cli` (`pip install continuityguard-cli`). This is the
 first published, installable distribution of ContinuityGuard -- the
-TypeScript/npm package has not been published to the npm registry as of
+TypeScript/npm package had not been published to the npm registry as of
 this release (see the root README's "Install" section); this PyPI
-package is not a replacement for it, and both remain intended as
-first-class, maintained-together distributions once npm publishes.
+package was not a replacement for it, and both were intended as
+first-class, maintained-together distributions once npm publishes, which
+it did on 2026-07-18 (see the npm 0.1.2 entry above).
 
 ### Added
 
