@@ -13,7 +13,9 @@
  */
 
 import { Command } from 'commander';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { readFileSync, realpathSync } from 'node:fs';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   checkFfmpegAvailable,
   buildMissingFfmpegMessage,
@@ -30,7 +32,15 @@ import { writeJsonReport, serializeReport } from './report/json.js';
 import { renderTerminalReport } from './report/terminal.js';
 import type { ScanReport } from './report/types.js';
 
-const TOOL_VERSION = '0.1.0';
+// Read the version straight from package.json instead of duplicating it in a
+// hardcoded string literal, which drifted out of sync with the real
+// published version (this file said '0.1.0' while npm had 0.1.4 live).
+// package.json sits one directory up from this file both in src/ (run via
+// tsx) and in dist/ (the built, published layout) -- npm always includes
+// package.json in the published tarball regardless of the "files" field, so
+// this path resolves correctly in a real installed package too.
+const packageJsonPath = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'package.json');
+const TOOL_VERSION = (JSON.parse(readFileSync(packageJsonPath, 'utf8')) as { version: string }).version;
 
 export function createProgram(): Command {
   const program = new Command();
@@ -172,8 +182,25 @@ export async function runScan(
    CI/manual testing rather than the unit test suite, matching this repo's
    convention of excluding src/cli.ts's process-wiring lines from coverage
    (see vitest.config.ts) while still unit-testing runScan/createProgram
-   directly. */
-if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
+   directly.
+   A straight `import.meta.url === file://${process.argv[1]}` comparison
+   breaks whenever this file is invoked through a symlink -- which is
+   exactly how npm wires up a global/`bin` install (e.g. `npm install -g
+   continuityguard-cli`, or an `npx` run): argv[1] stays the symlink path
+   (e.g. .../bin/continuityguard), while import.meta.url resolves through
+   the symlink to the real target file, so the two never match, the guard
+   silently evaluates false, and the CLI exits 0 having done nothing.
+   Resolving argv[1] to its real path before comparing fixes both the
+   symlinked and non-symlinked (direct `node dist/cli.js`) invocation. */
+function isDirectlyExecuted(): boolean {
+  if (!process.argv[1]) return false;
+  try {
+    return import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
+  } catch {
+    return false;
+  }
+}
+if (isDirectlyExecuted()) {
   createProgram().parseAsync(process.argv);
 }
 /* c8 ignore stop */

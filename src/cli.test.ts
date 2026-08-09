@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, rm, readFile, writeFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -23,9 +24,12 @@ describe('createProgram', () => {
     expect(optionFlags).toEqual(expect.arrayContaining(['--json', '--fps', '--out']));
   });
 
-  it('reports the tool version', () => {
+  it('reports the tool version from package.json, not a hardcoded string', () => {
+    const packageJson = JSON.parse(
+      readFileSync(join(import.meta.dirname, '..', 'package.json'), 'utf8')
+    ) as { version: string };
     const program = createProgram();
-    expect(program.version()).toBe('0.1.0');
+    expect(program.version()).toBe(packageJson.version);
   });
 });
 
