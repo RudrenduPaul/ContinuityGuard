@@ -1,18 +1,26 @@
 # ContinuityGuard
 
-A local, zero-network CLI that scores your already-generated AI short-drama clips for character-consistency drift and physically implausible motion, before you spend render credits finding out the hard way.
-
-```bash
-node dist/cli.js scan ./generated-clips/
-```
-
 [![CI](https://github.com/RudrenduPaul/ContinuityGuard/actions/workflows/ci.yml/badge.svg)](https://github.com/RudrenduPaul/ContinuityGuard/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/github/license/RudrenduPaul/ContinuityGuard)](LICENSE)
 [![Node.js >= 22](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](package.json)
 [![npm version](https://img.shields.io/npm/v/continuityguard-cli.svg)](https://www.npmjs.com/package/continuityguard-cli)
 [![PyPI version](https://img.shields.io/pypi/v/continuityguard-cli.svg)](https://pypi.org/project/continuityguard-cli/)
 
+<p align="center">
+<a href="#install">Install</a> •
+<a href="#quickstart">Quickstart</a> •
+<a href="#cli-reference">CLI reference</a> •
+<a href="#faq">FAQ</a> •
+<a href="#contributing">Contributing</a>
+</p>
+
+A local, zero-network CLI that scores your already-generated AI short-drama clips for character-consistency drift and physically implausible motion, before you spend render credits finding out the hard way.
+
 ![Terminal recording of installing ContinuityGuard from source (npm install, npm run build) and running its first scan against the bundled fixture clips, showing the character-consistency and physics-plausibility flags in the human-readable report](docs/demo.gif)
+
+```bash
+npm install -g continuityguard-cli
+```
 
 AI short-drama generation is having a real moment, and every title is a stack of individually generated shots. Generation models still drift: a character's face shifts slightly between cuts, or a motion jumps in a way that reads as physically wrong the moment a human watches it. Catching that after render is expensive. ContinuityGuard scans a folder of already-generated clips or frames from any pipeline and flags the shots worth a second look before you commit to a re-render.
 
@@ -44,20 +52,6 @@ local development or to track `main`), clone the repo and run `npm
 install && npm run build`, then run the CLI with `node dist/cli.js scan
 <directory>`, or `npm link` it locally to get the `continuityguard`
 command from your working copy.
-
-## Table of Contents
-
-- [Features](#features)
-- [What it does](#what-it-does)
-- [Quickstart](#quickstart)
-- [CLI reference](#cli-reference)
-- [Known limitations](#known-limitations-read-before-trusting-a-flag)
-- [How it compares](#how-it-compares)
-- [What is ContinuityGuard, and why does it exist](#what-is-continuityguard-and-why-does-it-exist)
-- [Local-only, always](#local-only-always)
-- [FAQ](#faq)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## Features
 
