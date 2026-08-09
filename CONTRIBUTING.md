@@ -3,10 +3,10 @@
 ContinuityGuard ships two distributions of the same scoring logic: an npm
 package (`continuityguard-cli`, TypeScript, repo root) and a PyPI package
 (`continuityguard-cli`, Python, `python/`), both using the identical
-bundled `mobilenetv2-7.onnx` model. As of this writing the PyPI package is
-published and the npm package is not yet (see the root README's "Install"
-section) -- please read this whole file before opening a PR, since which
-section applies depends on which codebase you're touching.
+bundled `mobilenetv2-7.onnx` model. Both are published today (see the root
+README's "Install" section) -- please read this whole file before opening
+a PR, since which section applies depends on which codebase you're
+touching.
 
 Thanks for looking at this. It's a small, narrowly-scoped tool, and
 contributions are welcome, especially:

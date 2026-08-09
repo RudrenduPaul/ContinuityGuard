@@ -1,6 +1,6 @@
 {
   "name": "continuityguard-cli",
-  "version": "0.1.1",
+  "version": "0.1.5",
   "description": "Free, local-first CLI that scores already-generated AI short-drama clips/frames for character-consistency and physics-plausibility problems before you waste render credits re-shooting a broken shot. Zero network calls, everything runs on your own machine.",
   "keywords": [
     "cli",
@@ -23,6 +23,9 @@
   },
   "license": "Apache-2.0",
   "author": "Rudrendu Paul",
+  "contributors": [
+    "Sourav Nandy"
+  ],
   "type": "module",
   "main": "./dist/cli.js",
   "bin": {
@@ -37,7 +40,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && node scripts/copy-assets.mjs",
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-assets.mjs && chmod +x dist/cli.js",
     "dev": "tsx src/cli.ts",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
@@ -51,7 +54,8 @@
     "onnxruntime-node": "^1.27.0"
   },
   "overrides": {
-    "adm-zip": "^0.6.0"
+    "adm-zip": "^0.6.0",
+    "nanoid": "^3.3.18"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
