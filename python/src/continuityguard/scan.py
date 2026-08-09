@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import time
 from datetime import datetime, timezone
+from importlib.metadata import PackageNotFoundError, version as _pkg_version
 from pathlib import Path
 from typing import List, Optional
 
@@ -34,7 +35,19 @@ from .report.types import (
 from .score.consistency import CONSISTENCY_SIMILARITY_THRESHOLD, ShotInput, score_consistency
 from .score.physics import DISCONTINUITY_MULTIPLIER, PhysicsShotInput, score_physics
 
-TOOL_VERSION = "0.1.0"
+# Read the version from the installed package's own metadata (sourced from
+# pyproject.toml's `version` field at build time) instead of duplicating it
+# in a hardcoded string literal, which drifted out of sync with the real
+# published version (this file said "0.1.0" while PyPI had 0.1.4 live).
+try:
+    TOOL_VERSION = _pkg_version("continuityguard-cli")
+except PackageNotFoundError:
+    # Running from source without `pip install -e .` (e.g. straight from a
+    # git checkout) -- there's no installed distribution to read metadata
+    # from. Fall back to an explicitly-labeled dev placeholder rather than a
+    # stale release number that would silently drift, same class of bug
+    # this replaces.
+    TOOL_VERSION = "0.0.0-dev"
 
 
 class NoClipsFoundError(Exception):
