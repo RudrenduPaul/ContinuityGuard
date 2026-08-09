@@ -27,9 +27,12 @@ from .report.types import (
     PhysicsPlausibilityReport,
     ScanReport,
 )
-from .scan import scan, scan_async
+from .scan import TOOL_VERSION, scan, scan_async
 
-__version__ = "0.1.0"
+# Single source of truth lives in scan.py's TOOL_VERSION (read from the
+# installed package's own metadata) so this doesn't drift out of sync the
+# way a separately hardcoded string here previously did.
+__version__ = TOOL_VERSION
 
 __all__ = [
     "scan",
