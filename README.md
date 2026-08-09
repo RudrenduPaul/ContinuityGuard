@@ -202,6 +202,8 @@ ContinuityGuard is a QA layer, not a generator, and that is the point. It sits o
 
 Your unreleased footage never leaves your machine. Every clip is decoded locally via `ffmpeg`, every embedding is computed locally via a bundled offline ONNX model, and the report is written to a local file. No account, no API key, no upload step, for any frame. `npm run verify:zero-network` proves this empirically: it monkey-patches every network entry point Node exposes and runs a real scan against this repo's own fixtures, and it would fail loudly if anything tried to reach the network. It runs in CI on every push. See `CHANGELOG.md` for the exact result.
 
+![Terminal recording of npm run verify:zero-network monkey-patching every network entry point Node exposes and running a real scan against this repo's own fixtures to prove zero network calls are made](docs/zero-network-verify.gif)
+
 ## FAQ
 
 **Is this validated for anime or stylized AI-generated characters?**
