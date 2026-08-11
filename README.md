@@ -1,4 +1,4 @@
-<!-- mcp-name: io.github.RudrenduPaul/continuityguard-cli -->
+<!-- mcp-name: io.github.RudrenduPaul/continuityguard -->
 # ContinuityGuard
 
 [![CI](https://github.com/RudrenduPaul/ContinuityGuard/actions/workflows/ci.yml/badge.svg)](https://github.com/RudrenduPaul/ContinuityGuard/actions/workflows/ci.yml)

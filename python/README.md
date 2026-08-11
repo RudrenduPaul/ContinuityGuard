@@ -1,3 +1,5 @@
+<!-- mcp-name: io.github.RudrenduPaul/continuityguard -->
+
 # continuityguard-cli (Python)
 
 A local, zero-network CLI and library that scores already-generated AI

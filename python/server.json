@@ -1,0 +1,35 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.RudrenduPaul/continuityguard",
+  "description": "Wraps the ContinuityGuard CLI as a single generic MCP tool for video-clip continuity scans.",
+  "repository": {
+    "url": "https://github.com/RudrenduPaul/ContinuityGuard",
+    "source": "github"
+  },
+  "version": "0.1.8",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "continuityguard-cli",
+      "version": "0.1.8",
+      "runtimeHint": "uvx",
+      "runtimeArguments": [
+        {
+          "type": "named",
+          "name": "--from",
+          "value": "continuityguard-cli"
+        }
+      ],
+      "packageArguments": [
+        {
+          "type": "positional",
+          "valueHint": "script_name",
+          "value": "continuityguard-mcp"
+        }
+      ],
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
