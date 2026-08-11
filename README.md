@@ -1,3 +1,4 @@
+<!-- mcp-name: io.github.RudrenduPaul/continuityguard-cli -->
 # ContinuityGuard
 
 [![CI](https://github.com/RudrenduPaul/ContinuityGuard/actions/workflows/ci.yml/badge.svg)](https://github.com/RudrenduPaul/ContinuityGuard/actions/workflows/ci.yml)
@@ -161,6 +162,34 @@ Options:
 ### Naming your clips so CG02 can track characters
 
 CG02 infers which character a clip belongs to from its filename, using a `<character>_<shot-id>.<ext>` convention (for example `mei_shot01.mp4`, `mei_shot02.mp4`). Clips sharing a character prefix are compared against that character's first-seen shot. There is no industry-standard character-tagging metadata format across AI short-drama pipelines, so ContinuityGuard currently reads it from the filename instead of requiring a separate manifest. Clips that don't match the convention are still decoded and scored by CG03, just not compared for character consistency.
+
+## MCP Server
+
+ContinuityGuard ships a Model Context Protocol (MCP) server, so an MCP-speaking agent (Claude Desktop, Claude Code, or any other MCP client) can drive a scan directly instead of you invoking the CLI by hand. It's part of the Python distribution, as an optional extra:
+
+```bash
+pip install "continuityguard-cli[mcp]"
+```
+
+Add it to your MCP client's config (for example Claude Desktop's `claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "continuityguard": {
+      "command": "continuityguard-mcp"
+    }
+  }
+}
+```
+
+The server exposes one tool, `run`, which shells out to the real `continuityguard` CLI with the argument list you pass it and returns a structured result (parsed JSON when the command produced it, otherwise raw stdout/stderr). Every failure mode -- a bad argument, a missing `ffmpeg`, a timeout -- comes back as a `{"error": ...}` result instead of crashing the server. Example call:
+
+```json
+{"tool": "run", "args": {"args": ["scan", "./clips", "--json"]}}
+```
+
+which returns the same structured report `continuityguard scan ./clips --json` would print, under a `result` key.
 
 ## Known limitations (read before trusting a flag)
 
