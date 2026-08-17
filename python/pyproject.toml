@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "continuityguard-cli"
-version = "0.1.4"
+version = "0.1.8"
 description = "Local, zero-network CLI and library that scores AI-generated short-drama video clips for character-consistency drift and physics-plausibility issues before you re-render."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -36,9 +36,12 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-  "pytest>=7.0,<9",
+  "pytest>=7.0,<10",
   "build>=1.0,<2",
-  "twine>=5.0,<7",
+  "twine>=5.0,<8",
+]
+mcp = [
+  "mcp[cli]>=2.0.0",
 ]
 
 [project.urls]
@@ -52,6 +55,10 @@ Documentation = "https://github.com/RudrenduPaul/ContinuityGuard/blob/main/docs/
 
 [project.scripts]
 continuityguard = "continuityguard.cli:main"
+continuityguard-mcp = "continuityguard.mcp_server:main"
+
+[tool.hatch.build]
+exclude = [".venv*/"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/continuityguard"]

@@ -1,3 +1,5 @@
+<!-- mcp-name: io.github.RudrenduPaul/continuityguard -->
+
 # continuityguard-cli (Python)
 
 A local, zero-network CLI and library that scores already-generated AI
@@ -8,6 +10,7 @@ the hard way.
 [![PyPI version](https://img.shields.io/pypi/v/continuityguard-cli.svg)](https://pypi.org/project/continuityguard-cli/)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/RudrenduPaul/ContinuityGuard/blob/main/LICENSE)
 [![Python versions](https://img.shields.io/pypi/pyversions/continuityguard-cli.svg)](https://pypi.org/project/continuityguard-cli/)
+[![npm version](https://img.shields.io/npm/v/continuityguard-cli.svg)](https://www.npmjs.com/package/continuityguard-cli)
 
 ## Why this exists
 

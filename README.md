@@ -1,10 +1,5 @@
+<!-- mcp-name: io.github.RudrenduPaul/continuityguard -->
 # ContinuityGuard
-
-A local, zero-network CLI that scores your already-generated AI short-drama clips for character-consistency drift and physically implausible motion, before you spend render credits finding out the hard way.
-
-```bash
-node dist/cli.js scan ./generated-clips/
-```
 
 [![CI](https://github.com/RudrenduPaul/ContinuityGuard/actions/workflows/ci.yml/badge.svg)](https://github.com/RudrenduPaul/ContinuityGuard/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/github/license/RudrenduPaul/ContinuityGuard)](LICENSE)
@@ -12,7 +7,21 @@ node dist/cli.js scan ./generated-clips/
 [![npm version](https://img.shields.io/npm/v/continuityguard-cli.svg)](https://www.npmjs.com/package/continuityguard-cli)
 [![PyPI version](https://img.shields.io/pypi/v/continuityguard-cli.svg)](https://pypi.org/project/continuityguard-cli/)
 
+<p align="center">
+<a href="#install">Install</a> •
+<a href="#quickstart">Quickstart</a> •
+<a href="#cli-reference">CLI reference</a> •
+<a href="#faq">FAQ</a> •
+<a href="#contributing">Contributing</a>
+</p>
+
+A local, zero-network CLI that scores your already-generated AI short-drama clips for character-consistency drift and physically implausible motion, before you spend render credits finding out the hard way.
+
 ![Terminal recording of installing ContinuityGuard from source (npm install, npm run build) and running its first scan against the bundled fixture clips, showing the character-consistency and physics-plausibility flags in the human-readable report](docs/demo.gif)
+
+```bash
+npm install -g continuityguard-cli
+```
 
 AI short-drama generation is having a real moment, and every title is a stack of individually generated shots. Generation models still drift: a character's face shifts slightly between cuts, or a motion jumps in a way that reads as physically wrong the moment a human watches it. Catching that after render is expensive. ContinuityGuard scans a folder of already-generated clips or frames from any pipeline and flags the shots worth a second look before you commit to a re-render.
 
@@ -44,20 +53,6 @@ local development or to track `main`), clone the repo and run `npm
 install && npm run build`, then run the CLI with `node dist/cli.js scan
 <directory>`, or `npm link` it locally to get the `continuityguard`
 command from your working copy.
-
-## Table of Contents
-
-- [Features](#features)
-- [What it does](#what-it-does)
-- [Quickstart](#quickstart)
-- [CLI reference](#cli-reference)
-- [Known limitations](#known-limitations-read-before-trusting-a-flag)
-- [How it compares](#how-it-compares)
-- [What is ContinuityGuard, and why does it exist](#what-is-continuityguard-and-why-does-it-exist)
-- [Local-only, always](#local-only-always)
-- [FAQ](#faq)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## Features
 
@@ -166,16 +161,45 @@ Options:
 
 ### Naming your clips so CG02 can track characters
 
-CG02 infers which character a clip belongs to from its filename, using a `<character>_<shot-id>.<ext>` convention (for example `mei_shot01.mp4`, `mei_shot02.mp4`). Clips sharing a character prefix are compared against that character's first-seen shot. There is no industry-standard character-tagging metadata format across AI short-drama pipelines, so v0.1 reads it from the filename instead of requiring a separate manifest. Clips that don't match the convention are still decoded and scored by CG03, just not compared for character consistency.
+CG02 infers which character a clip belongs to from its filename, using a `<character>_<shot-id>.<ext>` convention (for example `mei_shot01.mp4`, `mei_shot02.mp4`). Clips sharing a character prefix are compared against that character's first-seen shot. There is no industry-standard character-tagging metadata format across AI short-drama pipelines, so ContinuityGuard currently reads it from the filename instead of requiring a separate manifest. Clips that don't match the convention are still decoded and scored by CG03, just not compared for character consistency.
+
+## MCP Server
+
+ContinuityGuard ships a Model Context Protocol (MCP) server, so an MCP-speaking agent (Claude Desktop, Claude Code, or any other MCP client) can drive a scan directly instead of you invoking the CLI by hand. It's part of the Python distribution, as an optional extra:
+
+```bash
+pip install "continuityguard-cli[mcp]"
+```
+
+Add it to your MCP client's config (for example Claude Desktop's `claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "continuityguard": {
+      "command": "continuityguard-mcp"
+    }
+  }
+}
+```
+
+The server exposes one tool, `run`, which shells out to the real `continuityguard` CLI with the argument list you pass it and returns a structured result (parsed JSON when the command produced it, otherwise raw stdout/stderr). Every failure mode -- a bad argument, a missing `ffmpeg`, a timeout -- comes back as a `{"error": ...}` result instead of crashing the server. Example call:
+
+```json
+{"tool": "run", "args": {"args": ["scan", "./clips", "--json"]}}
+```
+
+which returns the same structured report `continuityguard scan ./clips --json` would print, under a `result` key.
 
 ## Known limitations (read before trusting a flag)
 
-- **Character-consistency scoring is best-validated on photorealistic content.** v0.1 uses a generic ImageNet-pretrained visual-similarity embedding (MobileNetV2, see `src/score/models/NOTICE.md` for the reasoning behind that choice). Its accuracy on stylized or anime-adjacent character designs, which describes most short-drama content, is genuinely unverified going into v0.1. Treat a flag on stylized footage as a prompt to look closer before you trust it.
+- **Character-consistency scoring is best-validated on photorealistic content.** ContinuityGuard currently uses a generic ImageNet-pretrained visual-similarity embedding (MobileNetV2, see `src/score/models/NOTICE.md` for the reasoning behind that choice). Its accuracy on stylized or anime-adjacent character designs, which describes most short-drama content, is genuinely unverified. Treat a flag on stylized footage as a prompt to look closer before you trust it.
 - **The consistency embedding measures general visual similarity: color, texture, and coarse shape between crops.** That's real signal on photorealistic faces, though weaker than a dedicated face-recognition embedding would give you. On stylized designs it's weaker still, and unvalidated.
 - **Physics-plausibility scoring is a frame-to-frame diff heuristic.** It compares motion between consecutive frames against a shot's own local baseline and flags outliers for human review; it makes no attempt to simulate real-world physics. Expect both false positives (legitimate fast motion, stylized jump-cuts) and false negatives (subtly implausible motion that stays under the threshold).
-- **Thresholds are calibrated on a small, fully synthetic fixture set** (solid-color clips, no real faces or recorded motion). See `CHANGELOG.md` for the exact numbers and the command that produced them. This is a real, reproducible starting point for v0.1, calibrated from two synthetic pairs rather than a large labeled dataset. Expect the numbers to move as real-world reports come in.
-- **The `<character>_<shot-id>` filename convention is a v0.1 simplification**, built for a category that has no standard character-tagging metadata format yet. A clip that doesn't follow it still gets scored for physics; its consistency comparison is simply skipped.
-- **Requires a system `ffmpeg` install.** ContinuityGuard checks for it at startup and prints the exact install command for your OS if it's missing (for example `brew install ffmpeg` on macOS, `apt install ffmpeg` on Debian/Ubuntu). It does not bundle a static ffmpeg binary in v0.1. A bundled per-platform build would be materially larger than this project's own dependency footprint and would inherit ffmpeg's own shifting LGPL/GPL licensing terms depending on which codecs are compiled in. Depending on a system install keeps this package small and its licensing surface simple.
+- **Thresholds are calibrated on a small, fully synthetic fixture set** (solid-color clips, no real faces or recorded motion). See `CHANGELOG.md` for the exact numbers and the command that produced them. This is a real, reproducible starting point, calibrated from two synthetic pairs rather than a large labeled dataset. Expect the numbers to move as real-world reports come in.
+- **The `<character>_<shot-id>` filename convention is a current simplification**, built for a category that has no standard character-tagging metadata format yet. A clip that doesn't follow it still gets scored for physics; its consistency comparison is simply skipped.
+- **Requires a system `ffmpeg` install.** ContinuityGuard checks for it at startup and prints the exact install command for your OS if it's missing (for example `brew install ffmpeg` on macOS, `apt install ffmpeg` on Debian/Ubuntu). It does not currently bundle a static ffmpeg binary. A bundled per-platform build would be materially larger than this project's own dependency footprint and would inherit ffmpeg's own shifting LGPL/GPL licensing terms depending on which codecs are compiled in. Depending on a system install keeps this package small and its licensing surface simple.
+- **Pinned to TypeScript 6.x, not yet 7.x.** TypeScript 7 (the native/Go compiler rewrite) dropped support for the CommonJS-interop default export that `typescript-eslint`'s peer range still requires as of its latest release (8.66.0, which still declares `typescript: >=4.8.4 <6.1.0`). This isn't a vulnerability, just an ecosystem-wide compatibility gap: the whole `typescript-eslint` toolchain hasn't shipped TS7 support yet, so this project will stay on TypeScript 6.x until it does.
 
 ## How it compares
 
@@ -202,6 +226,8 @@ ContinuityGuard is a QA layer, not a generator, and that is the point. It sits o
 
 Your unreleased footage never leaves your machine. Every clip is decoded locally via `ffmpeg`, every embedding is computed locally via a bundled offline ONNX model, and the report is written to a local file. No account, no API key, no upload step, for any frame. `npm run verify:zero-network` proves this empirically: it monkey-patches every network entry point Node exposes and runs a real scan against this repo's own fixtures, and it would fail loudly if anything tried to reach the network. It runs in CI on every push. See `CHANGELOG.md` for the exact result.
 
+![Terminal recording of npm run verify:zero-network monkey-patching every network entry point Node exposes and running a real scan against this repo's own fixtures to prove zero network calls are made](docs/zero-network-verify.gif)
+
 ## FAQ
 
 **Is this validated for anime or stylized AI-generated characters?**
@@ -217,7 +243,7 @@ No. Everything runs on CPU via `onnxruntime-node`, using a small (14MB) MobileNe
 No. That's mechanically enforced: `npm run verify:zero-network` patches every network entry point Node exposes and runs a real scan, and the check fails loudly if anything tries to reach the network. It runs on every CI push.
 
 **Why do I need to install ffmpeg separately instead of it being bundled?**
-A bundled static ffmpeg binary would add tens of megabytes per platform to this package and would inherit ffmpeg's own licensing terms, which shift between LGPL and GPL depending on which codecs are compiled in. ffmpeg is close to ubiquitous on developer machines already, so v0.1 depends on a system install and checks for it at startup with a clear, OS-specific error if it's missing.
+A bundled static ffmpeg binary would add tens of megabytes per platform to this package and would inherit ffmpeg's own licensing terms, which shift between LGPL and GPL depending on which codecs are compiled in. ffmpeg is close to ubiquitous on developer machines already, so ContinuityGuard depends on a system install and checks for it at startup with a clear, OS-specific error if it's missing.
 
 **Is this on npm yet?**
 Yes. `npm install -g continuityguard-cli` installs it today. The Python package is also on PyPI (`pip install continuityguard-cli`), using the same scoring logic and the same bundled model -- see [`python/README.md`](python/README.md).
@@ -232,7 +258,7 @@ Yes. `--json` writes a machine-readable report an agent or CI step can parse, an
 `package.json` requires Node >=22 and lists no OS restriction. The native scoring dependency, `onnxruntime-node`, ships prebuilt binaries for macOS, Linux, and Windows. You also need a system `ffmpeg` install (checked at startup, with an OS-specific install command printed if it's missing). The Python distribution (`pip install continuityguard-cli`) needs Python >=3.9 and the same system `ffmpeg` requirement, and is classified `Operating System :: OS Independent`.
 
 **How does this compare to a face-embedding library like deepface instead of a generic ImageNet model?**
-Directly, they solve different layers of the same problem. `serengil/deepface` (MIT-licensed, actively maintained) is a dedicated face-verification and embedding library; wiring it into a scan pipeline yourself would likely give more accurate character-consistency scoring than ContinuityGuard's current generic MobileNetV2 embedding, especially on stylized content. ContinuityGuard's role isn't to out-perform a dedicated face-embedding library on embeddings alone: it's the packaged CLI on top, doing ffmpeg decoding, the physics-plausibility pass, and structured report output in one zero-network command. Swapping in a stronger embedding model later is an open, tracked improvement, not a claim already delivered in v0.1. See "How it compares" above for the fuller table.
+Directly, they solve different layers of the same problem. `serengil/deepface` (MIT-licensed, actively maintained) is a dedicated face-verification and embedding library; wiring it into a scan pipeline yourself would likely give more accurate character-consistency scoring than ContinuityGuard's current generic MobileNetV2 embedding, especially on stylized content. ContinuityGuard's role isn't to out-perform a dedicated face-embedding library on embeddings alone: it's the packaged CLI on top, doing ffmpeg decoding, the physics-plausibility pass, and structured report output in one zero-network command. Swapping in a stronger embedding model later is an open, tracked improvement, not a claim already delivered. See "How it compares" above for the fuller table.
 
 **Is this free to use commercially?**
 Yes. Everything in this repo is Apache 2.0, including the permissive patent grant that license carries. There's no separate commercial tier, no usage cap, and no license key. Attribution and the license notice requirements of Apache 2.0 still apply, same as any Apache-licensed dependency you'd pull into a commercial project.
@@ -250,4 +276,4 @@ See `CONTRIBUTING.md` for local setup for both the TypeScript package (repo root
 
 ## License
 
-Everything in this repo: Apache 2.0. Free forever, no paid tier in v0.1.
+Everything in this repo: Apache 2.0. Free forever, no paid tier.
