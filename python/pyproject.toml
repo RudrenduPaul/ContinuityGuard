@@ -13,7 +13,7 @@ authors = [
   { name = "Rudrendu Paul" },
   { name = "Sourav Nandy" },
 ]
-keywords = ["cli", "video-qa", "character-consistency", "ai-video", "short-drama", "ffmpeg", "onnxruntime", "local-first", "offline"]
+keywords = ["cli", "video-qa", "character-consistency", "ai-video", "short-drama", "ffmpeg", "onnxruntime", "local-first", "offline", "computer-vision", "video-processing", "zero-network", "onnx", "library"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",

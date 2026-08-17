@@ -11,7 +11,12 @@
     "ffmpeg",
     "onnxruntime",
     "local-first",
-    "offline"
+    "offline",
+    "computer-vision",
+    "video-processing",
+    "zero-network",
+    "typescript",
+    "onnx"
   ],
   "homepage": "https://github.com/RudrenduPaul/ContinuityGuard#readme",
   "bugs": {
