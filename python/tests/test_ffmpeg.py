@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import tempfile
+from urllib.parse import urlparse
 from pathlib import Path
 
 import pytest
@@ -45,7 +46,8 @@ def test_describe_ffmpeg_install_command_macos():
 
 
 def test_describe_ffmpeg_install_command_unknown_mentions_download_page():
-    assert "ffmpeg.org" in describe_ffmpeg_install_command("unknown")
+    hint = describe_ffmpeg_install_command("unknown")
+    assert urlparse(hint.split()[-1]).hostname == "ffmpeg.org"
 
 
 def test_list_clips_filters_by_supported_extension_and_sorts():
