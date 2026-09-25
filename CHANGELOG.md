@@ -6,6 +6,16 @@ JS/TS, repo root) and the PyPI package (`continuityguard-cli`, Python,
 `python/`) -- since they ship the same scoring logic and the same bundled
 ONNX model; entries note which distribution they apply to.
 
+## [npm 0.1.6] - 2026-09-24
+
+### Changed
+
+- Upgraded the runtime dependency `onnxruntime-node` to `^1.30.0` and
+  refreshed development dependencies (Vitest 5, ESLint 10.11, and others).
+  The supported Node.js floor is unchanged (22 or newer).
+- npm publishing moves to npm Trusted Publishing (GitHub Actions OIDC), so
+  releases no longer use a long-lived npm token.
+
 ## [npm 0.1.5] / [Python 0.1.5] - 2026-08-08
 
 ### Fixed
